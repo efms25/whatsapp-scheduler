@@ -4,13 +4,14 @@ import { useState } from 'react'
 
 import { ConnectionBadge } from '../components/status'
 import { Icon } from '../components/icons'
-import { Alert, Badge, Button, Card, EmptyState, PageHeader, Spinner } from '../components/ui'
+import { Alert, Badge, Button, Card, EmptyState, Input, PageHeader, Spinner } from '../components/ui'
 import { api } from '../lib/api'
 import { formatDateTime, formatError, formatUptime } from '../lib/format'
 
 export default function Settings(): ReactNode {
   const queryClient = useQueryClient()
   const [feedback, setFeedback] = useState<{ tone: 'emerald' | 'rose'; text: string } | null>(null)
+  const [groupQuery, setGroupQuery] = useState('')
 
   const status = useQuery({
     queryKey: ['whatsapp-status'],
@@ -59,6 +60,15 @@ export default function Settings(): ReactNode {
 
   const connection = status.data
   const qrData = qr.data?.qr
+
+  const allGroups = groups.data?.data ?? []
+  const query = groupQuery.trim().toLowerCase()
+  const visibleGroups = query
+    ? allGroups.filter(
+        (group) =>
+          group.subject.toLowerCase().includes(query) || group.id.toLowerCase().includes(query),
+      )
+    : allGroups
 
   return (
     <>
@@ -189,23 +199,57 @@ export default function Settings(): ReactNode {
         >
           {groups.isLoading ? (
             <Spinner />
-          ) : groups.data && groups.data.data.length > 0 ? (
-            <ul className="max-h-80 divide-y divide-slate-800 overflow-y-auto">
-              {groups.data.data.map((group) => (
-                <li key={group.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm text-slate-200">{group.subject}</p>
-                    <p className="truncate text-xs text-slate-500">{group.id}</p>
-                  </div>
-                  <Badge tone="slate">{group.participants_count} membros</Badge>
-                </li>
-              ))}
-            </ul>
-          ) : (
+          ) : allGroups.length === 0 ? (
             <EmptyState
               title="Nenhum grupo sincronizado"
               description="Conecte o WhatsApp e clique em Atualizar."
             />
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Icon
+                  name="search"
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                />
+                <Input
+                  type="search"
+                  value={groupQuery}
+                  onChange={(event) => setGroupQuery(event.target.value)}
+                  placeholder="Buscar por nome ou ID…"
+                  aria-label="Buscar grupos"
+                  className="pl-9"
+                />
+                {groupQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setGroupQuery('')}
+                    aria-label="Limpar busca"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 transition hover:text-slate-300"
+                  >
+                    <Icon name="x" className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              {visibleGroups.length === 0 ? (
+                <EmptyState
+                  title="Nenhum grupo encontrado"
+                  description="Tente outro termo de busca."
+                />
+              ) : (
+                <ul className="max-h-80 divide-y divide-slate-800 overflow-y-auto">
+                  {visibleGroups.map((group) => (
+                    <li key={group.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-slate-200">{group.subject}</p>
+                        <p className="truncate text-xs text-slate-500">{group.id}</p>
+                      </div>
+                      <Badge tone="slate">{group.participants_count} membros</Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </Card>
 

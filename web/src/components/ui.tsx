@@ -34,8 +34,8 @@ export function Button({
   )
 }
 
-export function Input(props: InputHTMLAttributes<HTMLInputElement>): ReactNode {
-  return <input className={inputClass} {...props} />
+export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInputElement>): ReactNode {
+  return <input className={`${inputClass} ${className}`} {...props} />
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>): ReactNode {

@@ -62,6 +62,12 @@ const paths: Record<string, ReactNode> = {
   ),
   x: <path d="M18 6 6 18M6 6l12 12" />,
   check: <path d="m5 12 5 5L20 7" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </>
+  ),
   external: (
     <>
       <path d="M15 3h6v6" />
